@@ -1,0 +1,44 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace
+*.xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# JUCE auto-generated code
+JuceLibraryCode/
+Builds/
+
+# User files
+*.user
+*.suo
+*.ncb
+*.pdb
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.pyc
+*.pyo
+*.tmp
+*.log
+
+# OS metadata
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Others
+*.zip
+*.tar
+*.gz
+*.bak
