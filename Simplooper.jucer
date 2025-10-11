@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="kNR8aj" name="Simplooper" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" defines="JUCE_MAC_APPLICATION_SUPPORTS_SECURE_RESTORABLE_STATE=1">
+  <MAINGROUP id="b6GUCK" name="Simplooper">
+    <GROUP id="{C3F93996-9677-0726-BD7E-A3752AC9406F}" name="Source">
+      <FILE id="XlrC7t" name="InputTap.h" compile="0" resource="0" file="Source/InputTap.h"/>
+      <FILE id="mqoiVO" name="LooperAudio.h" compile="0" resource="0" file="Source/LooperAudio.h"/>
+      <FILE id="Lz0f5F" name="SmartGate.h" compile="0" resource="0" file="Source/SmartGate.h"/>
+      <FILE id="xfSZTM" name="LooperAudio.cpp" compile="1" resource="0" file="Source/LooperAudio.cpp"/>
+      <FILE id="XOA0sr" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="ahigdS" name="LooperTrack.h" compile="0" resource="0" file="Source/LooperTrack.h"/>
+      <FILE id="lzp94U" name="LooperTrack.cpp" compile="1" resource="0" file="Source/LooperTrack.cpp"/>
+      <FILE id="exClgf" name="InputManager.cpp" compile="1" resource="0"
+            file="Source/InputManager.cpp"/>
+      <FILE id="TEwVdI" name="InputManager.h" compile="0" resource="0" file="Source/InputManager.h"/>
+      <FILE id="OSgpAv" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="ewzrH5" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+      <FILE id="Kjamm6" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="VST3_SDK_PATH=&quot;/Users/mtsh/SDKs/VST3_SDK&quot;&#10;"
+               appSandbox="1" appSandboxOptions="com.apple.security.device.microphone"
+               sendAppleEventsPermissionNeeded="1" microphonePermissionNeeded="1"
+               microphonePermissionsText="&#12510;&#12452;&#12463;&#12434;&#20351;&#29992;&#12375;&#12414;&#12377;"
+               customPList="&lt;key&gt;NSMusicUsageDescription&lt;/key&gt;&#10;&lt;string&gt;PizzaLooper plays audio output through your speakers &#128266;&lt;/string&gt;">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../juce"/>
+        <MODULEPATH id="juce_audio_devices" path="../../juce"/>
+        <MODULEPATH id="juce_audio_formats" path="../../juce"/>
+        <MODULEPATH id="juce_audio_processors" path="../../juce"/>
+        <MODULEPATH id="juce_core" path="../../juce"/>
+        <MODULEPATH id="juce_data_structures" path="../../juce"/>
+        <MODULEPATH id="juce_events" path="../../juce"/>
+        <MODULEPATH id="juce_graphics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_basics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_extra" path="../../juce"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <JUCEOPTIONS JUCE_PLUGINHOST_VST3="0" JUCE_PLUGINHOST_AU="0" JUCE_CUSTOM_VST3_SDK="1"/>
+</JUCERPROJECT>
