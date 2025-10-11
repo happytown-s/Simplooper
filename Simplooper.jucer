@@ -4,20 +4,22 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" defines="JUCE_MAC_APPLICATION_SUPPORTS_SECURE_RESTORABLE_STATE=1">
   <MAINGROUP id="b6GUCK" name="Simplooper">
     <GROUP id="{C3F93996-9677-0726-BD7E-A3752AC9406F}" name="Source">
-      <FILE id="XlrC7t" name="InputTap.h" compile="0" resource="0" file="Source/InputTap.h"/>
-      <FILE id="mqoiVO" name="LooperAudio.h" compile="0" resource="0" file="Source/LooperAudio.h"/>
-      <FILE id="Lz0f5F" name="SmartGate.h" compile="0" resource="0" file="Source/SmartGate.h"/>
-      <FILE id="xfSZTM" name="LooperAudio.cpp" compile="1" resource="0" file="Source/LooperAudio.cpp"/>
+      <GROUP id="{BAB8C5C4-4F39-203A-4CFC-FC525DBD8466}" name="Audio">
+        <FILE id="Kjamm6" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
+        <FILE id="mqoiVO" name="LooperAudio.h" compile="0" resource="0" file="Source/LooperAudio.h"/>
+        <FILE id="xfSZTM" name="LooperAudio.cpp" compile="1" resource="0" file="Source/LooperAudio.cpp"/>
+        <FILE id="Lz0f5F" name="SmartGate.h" compile="0" resource="0" file="Source/SmartGate.h"/>
+        <FILE id="XlrC7t" name="InputTap.h" compile="0" resource="0" file="Source/InputTap.h"/>
+        <FILE id="exClgf" name="InputManager.cpp" compile="1" resource="0"
+              file="Source/InputManager.cpp"/>
+        <FILE id="TEwVdI" name="InputManager.h" compile="0" resource="0" file="Source/InputManager.h"/>
+      </GROUP>
       <FILE id="XOA0sr" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="ahigdS" name="LooperTrack.h" compile="0" resource="0" file="Source/LooperTrack.h"/>
       <FILE id="lzp94U" name="LooperTrack.cpp" compile="1" resource="0" file="Source/LooperTrack.cpp"/>
-      <FILE id="exClgf" name="InputManager.cpp" compile="1" resource="0"
-            file="Source/InputManager.cpp"/>
-      <FILE id="TEwVdI" name="InputManager.h" compile="0" resource="0" file="Source/InputManager.h"/>
       <FILE id="OSgpAv" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="ewzrH5" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
-      <FILE id="Kjamm6" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
