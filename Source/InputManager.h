@@ -10,7 +10,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "RingBuffer.h"
+#include "TriggerEvent.h"
 
 struct SmartRecConfig
 {
@@ -23,17 +23,6 @@ struct SmartRecConfig
 	int fadeMs = 8;
 };
 
-// ===============================================
-// トリガーイベント情報
-// ===============================================
-
-struct TriggerEvent
-{
-	bool triggerd = false;
-	int sampleInBlock = -1;
-	long absIndex = -1; //リングバッファ上の絶対位置
-	int channel = 0; //検知チャンネル
-};
 
 
 // ===============================================
@@ -51,7 +40,13 @@ class InputManager
 
 	//メイン解析処理
 	void analyze(const juce::AudioBuffer<float>& input) ;
-	TriggerEvent getTriggerEvent() const noexcept;
+	TriggerEvent& getTriggerEvent() noexcept;
+	void setTriggerEvent(){triggerEvent.triggerd = false;}
+
+	//TriggerEvent& getTriggerEvent() {return triggerEvent;}
+	void processInput (const juce::AudioBuffer<float>& input)
+	{}
+
 
 	//設定
 	void setConfig(const SmartRecConfig& newConfig) noexcept;

@@ -23,6 +23,7 @@ class InputTap : public juce::AudioIODeviceCallback
 		inputManager.prepare(sampleRate, bufferSize);
 
 	}
+	void process(const juce::AudioBuffer<float>& input);
 
 	void audioDeviceAboutToStart(juce::AudioIODevice* device) override
 	{
@@ -30,7 +31,7 @@ class InputTap : public juce::AudioIODeviceCallback
 		const int bufSize = device ? device->getCurrentBufferSizeSamples() : 512;
 		buffer.setSize(juce::jmax(1, inCh), bufSize);
 		buffer.clear();
-		DBG("🎧 InputTap started: channels=" << inCh << " bufferSize=" << bufSize);
+		//DBG("🎧 InputTap started: channels=" << inCh << " bufferSize=" << bufSize);
 	}
 
 	// ✅ JUCE 7.0.5以降（macOS含む）で使用
@@ -103,17 +104,18 @@ class InputTap : public juce::AudioIODeviceCallback
 			dest.copyFrom(ch, 0, buffer, ch, 0, samples);
 	}
 
+
+
 	InputManager& getManager() noexcept{return inputManager; }
 	const InputManager& getManager() const noexcept {return inputManager;}
+	TriggerEvent& getTriggerEvent() noexcept {return inputManager.getTriggerEvent();}
 
 private:
-
-	SmartGate smartGate;
-
-
-	double sampleRate = 44100.0;
 	juce::AudioBuffer<float> buffer;
 	InputManager inputManager;
+	SmartGate smartGate;
+
+	double sampleRate = 44100.0;
 
 	void captureInput(const float* const* inputChannelData, int numInputChannels, int numSamples)
 	{

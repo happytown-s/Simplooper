@@ -155,6 +155,9 @@ void LooperTrack::startFlash(){
 	isFlashing = true;
 	flashProgress = 0.0f;
 }
+
+
+
 void LooperTrack::timerCallback(){
 	if(state == TrackState::Recording || state == TrackState::Playing){
 		flashProgress += 0.02f; //1周で50フレーム

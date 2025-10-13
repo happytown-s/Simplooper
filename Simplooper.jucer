@@ -5,6 +5,7 @@
   <MAINGROUP id="b6GUCK" name="Simplooper">
     <GROUP id="{C3F93996-9677-0726-BD7E-A3752AC9406F}" name="Source">
       <GROUP id="{BAB8C5C4-4F39-203A-4CFC-FC525DBD8466}" name="Audio">
+        <FILE id="HgDWHd" name="TriggerEvent.h" compile="0" resource="0" file="Source/TriggerEvent.h"/>
         <FILE id="Kjamm6" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
         <FILE id="mqoiVO" name="LooperAudio.h" compile="0" resource="0" file="Source/LooperAudio.h"/>
         <FILE id="xfSZTM" name="LooperAudio.cpp" compile="1" resource="0" file="Source/LooperAudio.cpp"/>

@@ -31,13 +31,19 @@ juce::Timer
 	void trackClicked(LooperTrack* track) override;
 	void buttonClicked(juce::Button* button) override;
 	void showDeviceSettings();
+	void updateStateVisual();
 
 	void timerCallback()override;
+	void startRec();
+
+
 
 	private:
 	// ===== オーディオ関連 =====
-	LooperAudio looper { 48000, 48000 * 10 }; // 10秒バッファ
 	InputTap inputTap;
+	TriggerEvent& sharedTrigger;
+	LooperAudio looper ;//10秒バッファ
+
 
 	// ===== デバイス管理 =====
 	juce::AudioDeviceManager deviceManager;

@@ -16,6 +16,7 @@ void InputManager::prepare(double newSampleRate, int bufferSize)
 	triggered  = false;
 	recording = false;
 	triggerEvent = {};
+	
 
 	//あとでRingBufferの準備を追加
 	//ringBuffer.prepare(numChannels, bufferSize * 8);
@@ -27,9 +28,10 @@ void InputManager::prepare(double newSampleRate, int bufferSize)
 
 void InputManager::reset()
 {
-	triggered = false;
+	triggerEvent.triggerd = false;
+	triggerEvent.sampleInBlock = -1;
+	triggerEvent.absIndex = -1;
 	recording = false;
-	triggerEvent = {};
 	DBG("InputManager::reset()");
 }
 
@@ -39,30 +41,26 @@ void InputManager::reset()
 
 void InputManager::analyze(const juce::AudioBuffer<float>& input)
 {
+	
 	// (1) ブロック内でしきい値検知を実行
 	bool trig = detectTriggerSample(input);
 
 	// (2) 状態更新
-	if (trig && !recording)
+	if (trig && !triggered)
 	{
 		triggered = true;
-		recording = true;
-
-		DBG(" Trigger detected - Recording Start");
-
 		//トリガー値を更新(仮、　absIndexはあとでリングバッファ実装時に設定 )
 		triggerEvent.triggerd = true;
 		triggerEvent.sampleInBlock = 0; //TODO 実際はdetectTriggerSample()で求めたサンプル値
 		triggerEvent.absIndex = -1;
+		DBG("Trigger ON");
 	}
-	else if(!trig && recording)
-	{
-		//停止条件を入れる
-	}
-	else
+	else if(!trig && triggered)
 	{
 		triggered = false;
 		triggerEvent.triggerd = false;
+
+		DBG("Trigger OFF");
 	}
 	updateStateMachine();
 }
@@ -110,7 +108,7 @@ void InputManager::updateStateMachine()
 // Getter / Setter
 //==============================================================================
 
-TriggerEvent InputManager::getTriggerEvent() const noexcept
+TriggerEvent& InputManager::getTriggerEvent() noexcept
 {
 	return triggerEvent;
 }

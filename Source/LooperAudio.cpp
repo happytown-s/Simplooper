@@ -1,9 +1,11 @@
 #include "LooperAudio.h"
 
-LooperAudio::LooperAudio(double sr, int max)
-: sampleRate(sr), maxSamples(max)
+
+LooperAudio::LooperAudio(TriggerEvent& sharedTrigger, double sr, int max)
+: triggerRef(sharedTrigger), sampleRate(sr), maxSamples(max)
 {
 }
+
 
 void LooperAudio::prepareToPlay(int samplesPerBlockExpected, double sr)
 {
@@ -13,19 +15,12 @@ void LooperAudio::prepareToPlay(int samplesPerBlockExpected, double sr)
 void LooperAudio::processBlock(juce::AudioBuffer<float>& output,
 							   const juce::AudioBuffer<float>& input)
 {
-//	if (input.getNumChannels() > 0)
-//	{
-//		auto range = juce::FloatVectorOperations::findMinAndMax(input.getReadPointer(0),
-//																input.getNumSamples());
-//		//if (std::abs(range.getStart()) > 0.001f || std::abs(range.getEnd()) > 0.001f)
-//		//	DBG("🎙️ Mic Level: " << range.getStart() << " ~ " << range.getEnd());
-//	}
-
 	// 録音・再生処理
-	recordIntoTracks(input);
 	output.clear();
+	recordIntoTracks(input);
 	mixTracksToOutput(output);
 
+	//入力音をモニター出力
 	const int numChannels = juce::jmin(input.getNumChannels(), output.getNumChannels());
 	const int numSamples = input.getNumSamples();
 
@@ -33,7 +28,9 @@ void LooperAudio::processBlock(juce::AudioBuffer<float>& output,
 	{
 		output.addFrom(ch, 0, input, ch, 0, numSamples);
 	}
-	
+
+	//DBG("Looper sees triggerd = " << (triggerRef.triggerd ? "true" : "false"));
+
 
 //	DBG("Output level: " << output.getRMSLevel(0, 0, output.getNumSamples()));
 	
@@ -44,7 +41,7 @@ void LooperAudio::processBlock(juce::AudioBuffer<float>& output,
 //		DBG("🔊 Output RMS: " << rms);
 }
 
-
+//------------------------------------------------------------
 // トラック管理
 void LooperAudio::addTrack(int trackId)
 {
@@ -56,20 +53,70 @@ void LooperAudio::addTrack(int trackId)
 
 void LooperAudio::startRecording(int trackId)
 {
-	if (auto it = tracks.find(trackId); it != tracks.end())
-	{
-		it->second.isRecording = true;
-		it->second.writePosition = 0;
-	}
+	auto& track = tracks[trackId];
+	track.isRecording = true;
+	track.writePosition = 0;
+
+	//TriggerEventが有効なら記録開始位置として反映
+	if(lastTriggerEvent.triggerd)
+		track.recordStartSample = (int)lastTriggerEvent.absIndex;
+	else
+		track.recordStartSample = 0;
+
+	DBG("🎬 Start recording track " << trackId
+		<< " at sample " << track.recordStartSample);
 }
+//------------------------------------------------------------
+
 
 void LooperAudio::stopRecording(int trackId)
 {
-	if (auto it = tracks.find(trackId); it != tracks.end())
+	auto& track = tracks[trackId];
+	track.isRecording = false;
+
+	triggerRef.triggerd = false;
+	triggerRef.sampleInBlock = -1;
+	triggerRef.absIndex = -1;
+
+	// 現在の録音長を保持
+	const int recordedLength = track.writePosition;
+	if (recordedLength <= 0) return;
+
+	if (masterLoopLength <= 0)
 	{
-		it->second.isRecording = false;
-		it->second.recordLength = it->second.writePosition;
+		// 録音長をそのままマスター長に採用
+		masterTrackId = trackId;
+		masterLoopLength = recordedLength;
+		track.recordLength = masterLoopLength;
+		track.lengthInSample = masterLoopLength;
+		masterStartSample = track.recordStartSample;
+
+		DBG("🎛 Master loop length set to " << masterLoopLength
+			<< " samples | recorded=" << recordedLength
+			<< " | masterStart=" << masterStartSample);
+		//return;
+	}else
+	{
+
+		juce::AudioBuffer<float> aligned;
+		aligned.setSize(2, masterLoopLength,false,false,true);
+		aligned.clear();
+
+		const int copyLen = juce::jmin(recordedLength, masterLoopLength);
+
+		aligned.copyFrom(0, 0, track.buffer, 0, 0, copyLen);
+		aligned.copyFrom(1, 0, track.buffer, 1, 0, copyLen);
+
+
+		// 🎯 整列済みループを保存
+		track.buffer.makeCopyOf(aligned);
+		track.lengthInSample = masterLoopLength;
+		track.recordLength = copyLen;
+
+		DBG("🟢 Track " << trackId << ": aligned to master (length " << masterLoopLength << ")");
 	}
+
+
 }
 
 void LooperAudio::startPlaying(int trackId)
@@ -100,23 +147,34 @@ void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 	{
 		if (!track.isRecording) continue;
 
+
 		const int numChannels = juce::jmin(input.getNumChannels(), track.buffer.getNumChannels());
-		const int numSamples = input.getNumSamples();
+		const int numSamples  = input.getNumSamples();
 
-		int samplesAvailable = track.buffer.getNumSamples() - track.writePosition;
-		int samplesToCopy = juce::jmin(input.getNumSamples(), samplesAvailable);
+		const int loopLength = (masterLoopLength > 0) ? masterLoopLength : track.buffer.getNumSamples();
 
-		for (int ch = 0; ch < numChannels; ++ch)
-		{
+		int remaining = loopLength - track.writePosition;
+
+		int samplesToCopy = juce::jmin(numSamples, remaining);
+
+		for(int ch = 0; ch < numChannels; ++ch)
 			track.buffer.copyFrom(ch, track.writePosition, input, ch, 0, samplesToCopy);
-			DBG("Recording samples to Track " << id << " pos: " << track.writePosition);
-		}
+
+		// 🧮 書き込み位置をループに沿って進める
 
 		track.writePosition += samplesToCopy;
 
-		if (track.writePosition >= track.buffer.getNumSamples())
-			track.writePosition = 0;
+		// 🔚 もし録音が1周分終わったら止める
+		track.recordLength += numSamples;
+		if (track.recordLength >= loopLength)
+		{
+			stopRecording(id);
+			startPlaying(id);
+			DBG("✅ Track " << id << " finished seamless loop (" << loopLength << " samples)");
+
+		}
 	}
+
 }
 
 void LooperAudio::mixTracksToOutput(juce::AudioBuffer<float>& output)
@@ -128,7 +186,7 @@ void LooperAudio::mixTracksToOutput(juce::AudioBuffer<float>& output)
 		const int numChannels = juce::jmin(output.getNumChannels(), track.buffer.getNumChannels());
 		const int numSamples = output.getNumSamples();
 		const int totalSamples = track.buffer.getNumSamples();
-		const int loopLength = juce::jmax(1, track.recordLength);
+		const int loopLength = (masterLoopLength > 0) ? masterLoopLength : juce::jmax(1, track.recordLength > 0 ? track.recordLength : track.buffer.getNumSamples());
 
 		int remaining = numSamples; //出音側ではみ出したサンプル数
 		int readPos = track.readPosition;
@@ -153,9 +211,9 @@ void LooperAudio::mixTracksToOutput(juce::AudioBuffer<float>& output)
 		track.readPosition = readPos;
 
 		// 🎛️ ログ（デバッグ用）
-		DBG("▶️ Playing track " << id
-			<< " | readPos: " << track.readPosition
-			<< " / " << track.buffer.getNumSamples());
+//		DBG("▶️ Playing track " << id
+//			<< " | readPos: " << track.readPosition
+//			<< " / " << track.buffer.getNumSamples());
 	}
 }
 
