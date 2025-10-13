@@ -70,6 +70,7 @@
 		561B2565270DA2EF36A042A9 /* include_juce_graphics.mm */ /* include_juce_graphics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_graphics.mm; path = ../../JuceLibraryCode/include_juce_graphics.mm; sourceTree = SOURCE_ROOT; };
 		58149CCA230B3327D8D1F61D /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		5921B75994DF3DAB8C1173A8 /* CoreAudio.framework */ /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		61564B56815D8018A990ACE6 /* TriggerEvent.h */ /* TriggerEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TriggerEvent.h; path = ../../Source/TriggerEvent.h; sourceTree = SOURCE_ROOT; };
 		627AA3C0B394D12A93D7BA4D /* include_juce_audio_processors_ara.cpp */ /* include_juce_audio_processors_ara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_ara.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_ara.cpp; sourceTree = SOURCE_ROOT; };
 		66D49E709EFE43CE219CC536 /* include_juce_audio_devices.mm */ /* include_juce_audio_devices.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_devices.mm; path = ../../JuceLibraryCode/include_juce_audio_devices.mm; sourceTree = SOURCE_ROOT; };
 		6D92F11963E85B00DCA576ED /* MetalKit.framework */ /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -249,6 +250,7 @@
 		E1583886D74FA2E7324B5CE5 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				61564B56815D8018A990ACE6,
 				3920EF492374536D8722DDAA,
 				FDFADB16236CCBD25313A895,
 				F904BFAC50C1C97EC7AACB25,
