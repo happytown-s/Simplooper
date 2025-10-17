@@ -1,16 +1,17 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "LooperTrack.h"
+#include "LooperTrackUi.h"
 #include "LooperAudio.h"
 #include "InputTap.h"
+#include "Util.h"
 
 //==============================================================================
 // ルーパーアプリ本体
 //==============================================================================
 class MainComponent :
 public juce::AudioAppComponent,
-public LooperTrack::Listener,
+public LooperTrackUi::Listener,
 public juce::Button::Listener,
 public LooperAudio::Listener,
 juce::Timer
@@ -33,7 +34,7 @@ juce::Timer
 	void resized() override;
 
 	// UIイベント
-	void trackClicked(LooperTrack* trackClicked) override;
+	void trackClicked(LooperTrackUi* trackClicked) override;
 	void buttonClicked(juce::Button* button) override;
 	void showDeviceSettings();
 	void updateStateVisual();
@@ -61,8 +62,8 @@ juce::Timer
 	juce::TextButton stopAllButton { "Stop All" };
 	juce::TextButton settingButton { "Audio Settings" };
 
-	std::vector<std::unique_ptr<LooperTrack>> tracks;
-	LooperTrack* selectedTrack = nullptr;
+	std::vector<std::unique_ptr<LooperTrackUi>> tracks;
+	LooperTrackUi* selectedTrack = nullptr;
 
 	const int topHeight = 40;
 	const int trackWidth = 100;

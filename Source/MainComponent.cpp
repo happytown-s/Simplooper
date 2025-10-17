@@ -14,7 +14,7 @@ MainComponent::MainComponent()
 	for (int i = 0; i < 4; ++i)
 	{
 		int newId = static_cast<int>(tracks.size() + 1);
-		auto track = std::make_unique<LooperTrack>(newId, LooperTrack::TrackState::Idle);
+		auto track = std::make_unique<LooperTrackUi>(newId, LooperTrackUi::TrackState::Idle);
 		track->setListener(this);
 		addAndMakeVisible(track.get());
 		tracks.push_back(std::move(track));
@@ -86,7 +86,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
 		for (auto& t : tracks)
 		{
 			if (t->getIsSelected() &&
-				t->getState() == LooperTrack::TrackState::Recording)
+				t->getState() == LooperTrackUi::TrackState::Recording)
 			{
 				anyRecording = true;
 				break;
@@ -103,7 +103,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
 					looper.startRecording(t->getTrackId());
 
 					juce::MessageManager::callAsync([this, &trig, &t]()
-					{t->setState(LooperTrack::TrackState::Recording);
+					{t->setState(LooperTrackUi::TrackState::Recording);
 					});
 				}
 			}
@@ -155,7 +155,7 @@ void MainComponent::resized()
 
 //==============================================================================
 
-void MainComponent::trackClicked(LooperTrack* clickedTrack)
+void MainComponent::trackClicked(LooperTrackUi* clickedTrack)
 {
 	const bool wasSelected = clickedTrack->getIsSelected(); // 押す前の状態を記録
 
@@ -201,7 +201,7 @@ void MainComponent::buttonClicked(juce::Button* button)
 		// 録音中 → 録音停止＆再生開始
 		for (auto& t : tracks)
 		{
-			if(t->getState() == LooperTrack::TrackState::Recording)
+			if(t->getState() == LooperTrackUi::TrackState::Recording)
 			{
 				anyRecording = true;
 				break;
@@ -213,19 +213,16 @@ void MainComponent::buttonClicked(juce::Button* button)
 			// 🎛 全録音停止 → 再生へ
 			for (auto& t : tracks)
 			{
-				if (t->getState() == LooperTrack::TrackState::Recording)
+				if (t->getState() == LooperTrackUi::TrackState::Recording)
 				{
 					int id = t->getTrackId();
 					looper.stopRecording(id);
 					looper.startPlaying(id);
-					t->setState(LooperTrack::TrackState::Playing);
+					t->setState(LooperTrackUi::TrackState::Playing);
 					t->setSelected(false);
 					//DBG("selected = " << (t->getIsSelected() ? "true" : "false"));
 				}
 			}
-
-
-			inputTap.resetTriggerEvent();
 		}
 		else
 		{
@@ -236,7 +233,7 @@ void MainComponent::buttonClicked(juce::Button* button)
 				{
 					int id = t->getTrackId();
 					looper.startRecording(id);
-					t->setState(LooperTrack::TrackState::Recording);
+					t->setState(LooperTrackUi::TrackState::Recording);
 					DBG("🎙 Start recording track " << id);
 				}
 			}
@@ -250,7 +247,7 @@ void MainComponent::buttonClicked(juce::Button* button)
 			int id = t->getTrackId();
 			looper.stopRecording(id);
 			looper.stopPlaying(id);
-			t->setState(LooperTrack::TrackState::Stopped);
+			t->setState(LooperTrackUi::TrackState::Stopped);
 		}
 	}
 	else if (button == &playAllButton)
@@ -259,10 +256,10 @@ void MainComponent::buttonClicked(juce::Button* button)
 		{
 			int id = t->getTrackId();
 
-			if(t->getState() != LooperTrack::TrackState::Idle)
+			if(t->getState() != LooperTrackUi::TrackState::Idle)
 			{
 				looper.startPlaying(id);
-				t->setState(LooperTrack::TrackState::Playing);
+				t->setState(LooperTrackUi::TrackState::Playing);
 			}
 		}
 		recordButton.setButtonText("Playing");
@@ -302,10 +299,10 @@ void MainComponent::updateStateVisual()
 	for(auto& t : tracks)
 	{
 		switch (t->getState()) {
-			case LooperTrack::TrackState::Recording:
+			case LooperTrackUi::TrackState::Recording:
 				anyRecording = true;
 				break;
-			case LooperTrack::TrackState::Playing:
+			case LooperTrackUi::TrackState::Playing:
 				anyPlaying = true;
 				break;
 			default:
@@ -372,8 +369,8 @@ void MainComponent::startRec()
 
 void MainComponent::timerCallback()
 {
-	if(inputTap.triggerFlag.exchange(false))
-		DBG("TriggerDetected!");
+	//if(inputTap.triggerFlag.exchange(false))
+		//DBG("TriggerDetected!");
 
 
 	//updateStateVisual();
@@ -385,25 +382,26 @@ void MainComponent::timerCallback()
 
 void MainComponent::onRecordingStarted(int trackID)
 {
-	DBG("Main : Track" << trackID << "started !");
+	//DBG("Main : Track" << trackID << "started !");
 
-	juce::MessageManager::callAsync([this, trackID]
+	for (auto& t : tracks)
 	{
-		for (auto& t : tracks)
+		util::safeUi([this, &t, trackID]{
 			if (t->getTrackId() == trackID)
-				t->setState(LooperTrack::TrackState::Recording);
-	});
+				t->setState(LooperTrackUi::TrackState::Recording);
+		});
+	}
 }
 
 void MainComponent::onRecordingStopped(int trackID)
 {
-	DBG("EVENT !!! Main : Track " << trackID << " finished recording!" );
+	//DBG("EVENT !!! Main : Track " << trackID << " finished recording!" );
 
 	juce::MessageManager::callAsync([this, trackID]
 									{
 		for (auto& t : tracks)
 			if (t->getTrackId() == trackID)
-				t->setState(LooperTrack::TrackState::Playing);
+				t->setState(LooperTrackUi::TrackState::Playing);
 	});
 }
 

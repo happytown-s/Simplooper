@@ -115,14 +115,6 @@ void LooperAudio::stopRecording(int trackId)
 	}
 
 	listeners.call([&] (Listener& l){ l.onRecordingStopped(trackId); });
-
-	if(triggerRef)
-	{
-		triggerRef->reset();
-		DBG("trigger off from stopRecording");
-	}
-
-
 }
 
 void LooperAudio::startPlaying(int trackId)

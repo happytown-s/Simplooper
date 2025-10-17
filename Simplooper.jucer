@@ -16,11 +16,13 @@
         <FILE id="TEwVdI" name="InputManager.h" compile="0" resource="0" file="Source/InputManager.h"/>
       </GROUP>
       <FILE id="XOA0sr" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="ahigdS" name="LooperTrack.h" compile="0" resource="0" file="Source/LooperTrack.h"/>
-      <FILE id="lzp94U" name="LooperTrack.cpp" compile="1" resource="0" file="Source/LooperTrack.cpp"/>
+      <FILE id="ahigdS" name="LooperTrackUi.h" compile="0" resource="0" file="Source/LooperTrackUi.h"/>
+      <FILE id="lzp94U" name="LooperTrackUi.cpp" compile="1" resource="0"
+            file="Source/LooperTrackUi.cpp"/>
       <FILE id="OSgpAv" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="ewzrH5" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
+      <FILE id="TRj33I" name="Util.h" compile="0" resource="0" file="Source/Util.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

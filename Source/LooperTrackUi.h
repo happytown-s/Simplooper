@@ -4,13 +4,13 @@
 /*
   ==============================================================================
 
-    LooperTrack.h
+    LooperTrackUi.h
     Created: 21 Sep 2025 5:33:19pm
     Author:  mt sh
   ==============================================================================
 */
 
-class LooperTrack : public juce::Component,juce::Timer
+class LooperTrackUi : public juce::Component,juce::Timer
 
 {
 	public :
@@ -23,7 +23,7 @@ class LooperTrack : public juce::Component,juce::Timer
 		Idle
 	};
 
-	explicit LooperTrack(int id, TrackState initialState = TrackState::Idle)
+	explicit LooperTrackUi(int id, TrackState initialState = TrackState::Idle)
 	: trackId(id),state(initialState)
 	{
 		setInterceptsMouseClicks(true, true);
@@ -33,9 +33,9 @@ class LooperTrack : public juce::Component,juce::Timer
 	{
 		public:
 		virtual ~Listener() = default;
-		virtual void trackClicked(LooperTrack* track) = 0;
+		virtual void trackClicked(LooperTrackUi* track) = 0;
 	};
-	~LooperTrack() override = default;
+	~LooperTrackUi() override = default;
 	//トラックの状態
 
 	void setTrackId(int id){trackId = id;}

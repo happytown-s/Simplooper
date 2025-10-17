@@ -1,16 +1,16 @@
 /*
   ==============================================================================
 
-    LooperTrack.cpp
+    LooperTrackUi.cpp
     Created: 21 Sep 2025 5:33:29pm
     Author:  mt sh
 
   ==============================================================================
 */
-#include "LooperTrack.h"
+#include "LooperTrackUi.h"
 
 
-void LooperTrack::paint(juce::Graphics& g)
+void LooperTrackUi::paint(juce::Graphics& g)
 {
 
 	auto bounds = getLocalBounds().toFloat();
@@ -37,7 +37,7 @@ void LooperTrack::paint(juce::Graphics& g)
 
 }
 
-void LooperTrack::drawGlowingBorder(juce::Graphics& g,juce::Colour glowColour){
+void LooperTrackUi::drawGlowingBorder(juce::Graphics& g,juce::Colour glowColour){
 	auto bounds = getLocalBounds().toFloat();
 
 	float totalPerimeter = bounds.getWidth() * 2 + bounds.getHeight()* 2;
@@ -73,31 +73,31 @@ void LooperTrack::drawGlowingBorder(juce::Graphics& g,juce::Colour glowColour){
 }
 
 
-void LooperTrack::mouseDown(const juce::MouseEvent&)
+void LooperTrackUi::mouseDown(const juce::MouseEvent&)
 {
 	if(listener != nullptr)
 		listener->trackClicked(this);
 }
-void LooperTrack::mouseEnter(const juce::MouseEvent&){
+void LooperTrackUi::mouseEnter(const juce::MouseEvent&){
 	isMouseOver = true;
 	//DBG("MouseOver");
 	repaint();
 }
-void LooperTrack::mouseExit(const juce::MouseEvent&){
+void LooperTrackUi::mouseExit(const juce::MouseEvent&){
 	isMouseOver = false;
 	//juce::Logger::writeToLog("MouseExit");
 	repaint();
 }
-void LooperTrack::setSelected(bool shouldBeSelected){
+void LooperTrackUi::setSelected(bool shouldBeSelected){
 	isSelected = shouldBeSelected;
 	repaint();
 }
-bool LooperTrack::getIsSelected() const {return isSelected;}
+bool LooperTrackUi::getIsSelected() const {return isSelected;}
 
-void LooperTrack::setListener(Listener* listener) { this->listener = listener;}
+void LooperTrackUi::setListener(Listener* listener) { this->listener = listener;}
 
 
-void LooperTrack::setState(TrackState newState)
+void LooperTrackUi::setState(TrackState newState)
 {
 	state = newState;
 
@@ -126,7 +126,7 @@ void LooperTrack::setState(TrackState newState)
 	}
 	repaint();
 }
-juce::String LooperTrack::getStateString()const {
+juce::String LooperTrackUi::getStateString()const {
 	switch (state) {
 		case TrackState::Empty: return "Empty";
 		case TrackState::Recording: return "Recording";
@@ -138,25 +138,25 @@ juce::String LooperTrack::getStateString()const {
 }
 
 
-void LooperTrack::startRecording(){
+void LooperTrackUi::startRecording(){
 	setState(TrackState::Recording);
 	flashProgress = 0.0f;
 	startTimerHz(60); //60FPS
 }
-void LooperTrack::stopRecording(){
+void LooperTrackUi::stopRecording(){
 	setState(TrackState::Playing);
 	flashProgress = 0.0f;
 	startTimerHz(60);
 }
 
-void LooperTrack::startFlash(){
+void LooperTrackUi::startFlash(){
 	isFlashing = true;
 	flashProgress = 0.0f;
 }
 
 
 
-void LooperTrack::timerCallback(){
+void LooperTrackUi::timerCallback(){
 	if(state == TrackState::Recording || state == TrackState::Playing){
 		flashProgress += 0.02f; //1周で50フレーム
 		if(flashProgress >= 1.0f){
