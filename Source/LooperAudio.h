@@ -8,14 +8,28 @@
 class LooperAudio
 {
 	public:
+	//録音開始と終了をMainComponentに知らせる
+	struct Listener
+	{
+		virtual ~Listener() = default;
 
-	LooperAudio(TriggerEvent& sharedTrigger,double sampleRate = 44100.0,int maxSamples = 480000);
+		virtual void onRecordingStarted(int trackID) = 0;
+		virtual void onRecordingStopped(int trackID) = 0;
+	};
 
-	~LooperAudio() = default;
+	LooperAudio(double sr,int max);
 
-	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
+	~LooperAudio();
+
+	void prepareToPlay(int samplesPerBlockExpected, double sr);
 	void processBlock(juce::AudioBuffer<float>& output, const juce::AudioBuffer<float>& input);
+	void releaseResources() {}
 
+	//TriggerEventの参照をセット
+	void setTriggerReference(juce::TriggerEvent& ref)
+	{triggerRef = &ref;}
+
+//トラック操作
 	void addTrack(int trackId);
 	void startRecording(int trackId);
 	void stopRecording(int trackId);
@@ -25,16 +39,19 @@ class LooperAudio
 
 	void startSequentialRecording(const std::vector<int>& selectedTracks);
 	void stopRecordingAndContinue();
+
+
 	bool isRecordingActive() const;
 	bool isLastTrackRecording() const;
 	int getCurrentTrackId() const;
 
-	const TriggerEvent& getTriggerRef() const noexcept {return triggerRef;}
 
-
-	
+	//リスナー関係
+	void addListener(Listener* l) {listeners.add(l);}
+	void removeListener(Listener* l){listeners.remove(l);}
 
 private:
+
 	struct TrackData
 	{
 		juce::AudioBuffer<float> buffer;
@@ -50,7 +67,7 @@ private:
 
 	std::map<int, TrackData> tracks;
 
-	TriggerEvent& triggerRef;
+
 	double sampleRate;
 	int maxSamples;
 
@@ -61,12 +78,14 @@ private:
 	std::vector<int> recordingQueue;
 	int currentRecordingIndex = -1;
 
-	TriggerEvent lastTriggerEvent;
-	//マスターの録音開始位置
-	int masterStartSample    = 0;
+	juce::ListenerList<Listener> listeners;
 
+	juce::TriggerEvent* triggerRef = nullptr;
 
 	void recordIntoTracks(const juce::AudioBuffer<float>& input);
 	void mixTracksToOutput(juce::AudioBuffer<float>& output);
+
+	//マスターの録音開始位置
+	int masterStartSample    = 0;
 };
 

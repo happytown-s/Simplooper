@@ -14,7 +14,7 @@
 
 struct SmartRecConfig
 {
-	float userThreshold = 0.01f;     //録音開始のしきい値
+	float userThreshold = 0.005f;     //録音開始のしきい値
 	float silenceThreshold = 0.005f; //無音とみなすしきい値
 	int minSilenceMs = 10;		   //無音が続く時間(停止判定などに使用予定)
 	int maxPreRollMs = 25;		   //遡り記録の最大時間
@@ -38,21 +38,23 @@ class InputManager
 	void prepare(double sampleRate, int bufferSize);
 	void reset();
 
+
 	//メイン解析処理
 	void analyze(const juce::AudioBuffer<float>& input) ;
-	TriggerEvent& getTriggerEvent() noexcept;
+	juce::TriggerEvent& getTriggerEvent() noexcept;
 	void setTriggerEvent(){triggerEvent.triggerd = false;}
 
 	//TriggerEvent& getTriggerEvent() {return triggerEvent;}
 	void processInput (const juce::AudioBuffer<float>& input)
 	{}
 
-
 	//設定
 	void setConfig(const SmartRecConfig& newConfig) noexcept;
 	const SmartRecConfig& getConfig() const noexcept;
 
 private:
+
+	float computeEnergy(const juce::AudioBuffer<float>& input);
 
 	//内部ロジック
 	bool detectTriggerSample(const juce::AudioBuffer<float>& input);
@@ -64,10 +66,12 @@ private:
 //	RingBuffer ringBuffer;
 
 	SmartRecConfig config;
-	TriggerEvent triggerEvent;
+	juce::TriggerEvent triggerEvent;
 
 	double sampleRate = 44100.0;
 	bool triggered = false;
 	bool recording = false;
+	
+	float smoothedEnergy = 0.0f;
 
 };

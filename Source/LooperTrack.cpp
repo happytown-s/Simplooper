@@ -75,10 +75,8 @@ void LooperTrack::drawGlowingBorder(juce::Graphics& g,juce::Colour glowColour){
 
 void LooperTrack::mouseDown(const juce::MouseEvent&)
 {
-	if(listener != nullptr){
+	if(listener != nullptr)
 		listener->trackClicked(this);
-	}
-	//juce::Logger::writeToLog("Track Clicked");
 }
 void LooperTrack::mouseEnter(const juce::MouseEvent&){
 	isMouseOver = true;

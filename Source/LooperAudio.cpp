@@ -1,11 +1,15 @@
 #include "LooperAudio.h"
 
 
-LooperAudio::LooperAudio(TriggerEvent& sharedTrigger, double sr, int max)
-: triggerRef(sharedTrigger), sampleRate(sr), maxSamples(max)
+LooperAudio::LooperAudio(double sr, int max)
+: sampleRate(sr), maxSamples(max)
 {
 }
 
+LooperAudio::~LooperAudio()
+{
+	//removeListener(listeners);
+}
 
 void LooperAudio::prepareToPlay(int samplesPerBlockExpected, double sr)
 {
@@ -29,13 +33,6 @@ void LooperAudio::processBlock(juce::AudioBuffer<float>& output,
 		output.addFrom(ch, 0, input, ch, 0, numSamples);
 	}
 
-	//DBG("Looper sees triggerd = " << (triggerRef.triggerd ? "true" : "false"));
-
-
-//	DBG("Output level: " << output.getRMSLevel(0, 0, output.getNumSamples()));
-	
-
-	
 //	float rms = output.getRMSLevel(0, 0, output.getNumSamples());
 //	if (rms > 0.001f)
 //		DBG("🔊 Output RMS: " << rms);
@@ -55,16 +52,21 @@ void LooperAudio::startRecording(int trackId)
 {
 	auto& track = tracks[trackId];
 	track.isRecording = true;
+	track.isPlaying     = false;
+	track.readPosition  = 0;
+	track.recordLength  = 0;
 	track.writePosition = 0;
 
 	//TriggerEventが有効なら記録開始位置として反映
-	if(lastTriggerEvent.triggerd)
-		track.recordStartSample = (int)lastTriggerEvent.absIndex;
+	if(triggerRef && triggerRef->triggerd)
+		track.recordStartSample = static_cast<int>(triggerRef->absIndex) ;
 	else
 		track.recordStartSample = 0;
 
 	DBG("🎬 Start recording track " << trackId
 		<< " at sample " << track.recordStartSample);
+
+	listeners.call([&] (Listener& l) { l.onRecordingStarted(trackId); });
 }
 //------------------------------------------------------------
 
@@ -73,10 +75,6 @@ void LooperAudio::stopRecording(int trackId)
 {
 	auto& track = tracks[trackId];
 	track.isRecording = false;
-
-	triggerRef.triggerd = false;
-	triggerRef.sampleInBlock = -1;
-	triggerRef.absIndex = -1;
 
 	// 現在の録音長を保持
 	const int recordedLength = track.writePosition;
@@ -116,6 +114,14 @@ void LooperAudio::stopRecording(int trackId)
 		DBG("🟢 Track " << trackId << ": aligned to master (length " << masterLoopLength << ")");
 	}
 
+	listeners.call([&] (Listener& l){ l.onRecordingStopped(trackId); });
+
+	if(triggerRef)
+	{
+		triggerRef->reset();
+		DBG("trigger off from stopRecording");
+	}
+
 
 }
 
@@ -143,6 +149,7 @@ void LooperAudio::clearTrack(int trackId)
 // 録音・再生処理
 void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 {
+
 	for (auto& [id, track] : tracks)
 	{
 		if (!track.isRecording) continue;
@@ -168,11 +175,16 @@ void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 		track.recordLength += numSamples;
 		if (track.recordLength >= loopLength)
 		{
+			
 			stopRecording(id);
+
+
 			startPlaying(id);
+
 			DBG("✅ Track " << id << " finished seamless loop (" << loopLength << " samples)");
 
 		}
+
 	}
 
 }

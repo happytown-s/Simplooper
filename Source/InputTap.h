@@ -103,12 +103,19 @@ class InputTap : public juce::AudioIODeviceCallback
 		for (int ch = 0; ch < channels; ++ch)
 			dest.copyFrom(ch, 0, buffer, ch, 0, samples);
 	}
+	void resetTriggerEvent()
+	{
+		auto& trig = inputManager.getTriggerEvent();
+		trig.triggerd = false;
+		trig.sampleInBlock = -1;
+		trig.absIndex = -1;
+	}
 
 
 
 	InputManager& getManager() noexcept{return inputManager; }
 	const InputManager& getManager() const noexcept {return inputManager;}
-	TriggerEvent& getTriggerEvent() noexcept {return inputManager.getTriggerEvent();}
+	juce::TriggerEvent& getTriggerEvent() noexcept {return inputManager.getTriggerEvent();}
 
 private:
 	juce::AudioBuffer<float> buffer;

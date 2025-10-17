@@ -3,7 +3,7 @@
 //==============================================================================
 MainComponent::MainComponent()
 	: sharedTrigger(inputTap.getTriggerEvent()),
-	looper(sharedTrigger)
+		looper(44100, 44100 * 10)
 {
 	setAudioChannels(2, 2);
 	deviceManager.addAudioCallback(&inputTap); // 入力だけTapする
@@ -37,6 +37,10 @@ MainComponent::MainComponent()
 	stopAllButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
 
 	setSize(720, 600);
+
+
+	//ルーパーからのリスナーイベントを受け取る
+	looper.addListener(this);
 }
 
 MainComponent::~MainComponent()
@@ -50,10 +54,10 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 {
 	inputTap.prepare(sampleRate, samplesPerBlockExpected);
 	looper.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	looper.setTriggerReference(inputTap.getManager().getTriggerEvent());
 
 	DBG("InputTap trigger address = " + juce::String((juce::uint64)(uintptr_t)&inputTap.getTriggerEvent()));
 	DBG("Shared trigger address   = " + juce::String((juce::uint64)(uintptr_t)&sharedTrigger));
-	DBG("Looper trigger address   = " + juce::String((juce::uint64)(uintptr_t)&looper.getTriggerRef()));
 
 }
 
@@ -74,74 +78,45 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
 	inputTap.getLatestInput(input);
 
 	// === トリガーが立ったら ===
+
 	if (trig.triggerd)
 	{
-
-
-		// UIスレッドで安全に録音処理 & 見た目更新
-		juce::MessageManager::callAsync([this, trig]()
+		
+		bool anyRecording = false;
+		for (auto& t : tracks)
 		{
-			bool anyRecording = false;
+			if (t->getIsSelected() &&
+				t->getState() == LooperTrack::TrackState::Recording)
+			{
+				anyRecording = true;
+				break;
+			}
+		}
+
+		if (!anyRecording)
+		{
+			// 🟢 新規録音を開始
 			for (auto& t : tracks)
 			{
-				if (t->getState() == LooperTrack::TrackState::Recording)
+				if (t->getIsSelected())
 				{
-					anyRecording = true;
-					break;
+					looper.startRecording(t->getTrackId());
+
+					juce::MessageManager::callAsync([this, &trig, &t]()
+					{t->setState(LooperTrack::TrackState::Recording);
+					});
 				}
 			}
-
-			if (!anyRecording)
-			{
-				std::vector<int> selectedIDs;
-				for (auto& t : tracks)
-				{
-					if (t->getIsSelected())
-					{
-						selectedIDs.push_back(t->getTrackId());
-						t->setState(LooperTrack::TrackState::Recording);
-						t->repaint(); // 🎨 見た目更新
-						DBG("🎚 Auto trigger selected track: " << t->getTrackId());
-					}
-				}
-
-				if (!selectedIDs.empty())
-				{
-					for (int id : selectedIDs)
-						looper.startRecording(id);
-
-					// ✅ ボタンのUI更新
-					recordButton.setButtonText("Recording...");
-					recordButton.setColour(juce::TextButton::buttonColourId,
-										   juce::Colours::darkred);
-
-					DBG("🎬 Auto-triggered recording started!");
-				}
-				else
-				{
-					DBG("⚠️ Trigger detected but no track selected!");
-				}
-			}
-			else
-			{
-				recordButton.setButtonText("Rec");
-				recordButton.setColour(juce::TextButton::buttonColourId,
-									   juce::Colours::darkgrey);
-			}
-
-		});
-
-		DBG("triggerd is " << (trig.triggerd ? "true" : "false"));
-		// リセット（Audioスレッド側）
-		trig.triggerd = false;
-		trig.sampleInBlock = -1;
-		trig.absIndex = -1;
-		DBG("triggerd is " << (trig.triggerd ? "true" : "false"));
-
-
+		}
+		else
+		{
+			// 鎮火！
+			trig.triggerd = false;
+			trig.sampleInBlock = -1;
+			trig.absIndex = -1;
+		}
+			
 	}
-	
-
 	// 🌀 LooperAudio の処理は常に実行
 	looper.processBlock(*bufferToFill.buffer, input);
 }
@@ -180,13 +155,27 @@ void MainComponent::resized()
 
 //==============================================================================
 
-void MainComponent::trackClicked(LooperTrack* track)
+void MainComponent::trackClicked(LooperTrack* clickedTrack)
 {
-	DBG("Clicked track ID: " + juce::String(track->getTrackId()));
+	const bool wasSelected = clickedTrack->getIsSelected(); // 押す前の状態を記録
 
+	// まず全トラックの選択を解除
 	for (auto& t : tracks)
-		t->setSelected(t.get() == track ? !t->getIsSelected() : t->getIsSelected());
+		t->setSelected(false);
+
+	// もし前回選ばれてなかったら今回ONにする
+	clickedTrack->setSelected(!wasSelected);
+
+	// すべて再描画
+	for (auto& t : tracks)
+		t->repaint();
+
+	if (clickedTrack->getIsSelected())
+		DBG("🎯 Selected track ID: " << clickedTrack->getTrackId());
+	else
+		DBG("🚫 All tracks deselected");
 }
+
 
 void MainComponent::buttonClicked(juce::Button* button)
 {
@@ -234,12 +223,9 @@ void MainComponent::buttonClicked(juce::Button* button)
 					//DBG("selected = " << (t->getIsSelected() ? "true" : "false"));
 				}
 			}
-			// 🎯 トリガーのリセット（誤作動防止）
-			auto& trig = inputTap.getManager().getTriggerEvent();
-			trig.triggerd = false;
-			trig.sampleInBlock = -1;
-			trig.absIndex = -1;
-			DBG("🎛 Trigger reset after stop");
+
+
+			inputTap.resetTriggerEvent();
 		}
 		else
 		{
@@ -273,13 +259,13 @@ void MainComponent::buttonClicked(juce::Button* button)
 		{
 			int id = t->getTrackId();
 
-			if(t->getState() == LooperTrack::TrackState::Idle)
-				continue;
-			looper.startPlaying(id);
-			t->setState(LooperTrack::TrackState::Playing);
-			t->repaint();
+			if(t->getState() != LooperTrack::TrackState::Idle)
+			{
+				looper.startPlaying(id);
+				t->setState(LooperTrack::TrackState::Playing);
+			}
 		}
-		recordButton.setButtonText("Play");
+		recordButton.setButtonText("Playing");
 		recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgreen);
 	}
 
@@ -338,7 +324,7 @@ void MainComponent::updateStateVisual()
 	{recordButton.setButtonText("Next");
 		recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkorange);
 	}else if(anyPlaying)
-	{recordButton.setButtonText("Stop");
+	{recordButton.setButtonText("Playing");
 		recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgrey);
 	}else
 	{
@@ -389,8 +375,35 @@ void MainComponent::timerCallback()
 	if(inputTap.triggerFlag.exchange(false))
 		DBG("TriggerDetected!");
 
-	for (auto& t :tracks)
-	{
-		updateStateVisual();
-	}
+
+	//updateStateVisual();
+
 }
+
+
+//===========リスナーイベント=================
+
+void MainComponent::onRecordingStarted(int trackID)
+{
+	DBG("Main : Track" << trackID << "started !");
+
+	juce::MessageManager::callAsync([this, trackID]
+	{
+		for (auto& t : tracks)
+			if (t->getTrackId() == trackID)
+				t->setState(LooperTrack::TrackState::Recording);
+	});
+}
+
+void MainComponent::onRecordingStopped(int trackID)
+{
+	DBG("EVENT !!! Main : Track " << trackID << " finished recording!" );
+
+	juce::MessageManager::callAsync([this, trackID]
+									{
+		for (auto& t : tracks)
+			if (t->getTrackId() == trackID)
+				t->setState(LooperTrack::TrackState::Playing);
+	});
+}
+

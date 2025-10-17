@@ -12,10 +12,15 @@ class MainComponent :
 public juce::AudioAppComponent,
 public LooperTrack::Listener,
 public juce::Button::Listener,
+public LooperAudio::Listener,
 juce::Timer
 {
 	public:
 	MainComponent();
+	void onRecordingStarted(int trackID) override;
+	void onRecordingStopped(int trackID) override;
+
+
 	~MainComponent() override;
 
 	// AudioAppComponent
@@ -28,12 +33,11 @@ juce::Timer
 	void resized() override;
 
 	// UIイベント
-	void trackClicked(LooperTrack* track) override;
+	void trackClicked(LooperTrack* trackClicked) override;
 	void buttonClicked(juce::Button* button) override;
 	void showDeviceSettings();
 	void updateStateVisual();
 
-	void timerCallback()override;
 	void startRec();
 
 
@@ -41,8 +45,11 @@ juce::Timer
 	private:
 	// ===== オーディオ関連 =====
 	InputTap inputTap;
-	TriggerEvent& sharedTrigger;
+	juce::TriggerEvent& sharedTrigger;
 	LooperAudio looper ;//10秒バッファ
+
+	void timerCallback()override;
+
 
 
 	// ===== デバイス管理 =====
