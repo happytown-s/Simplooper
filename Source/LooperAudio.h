@@ -40,6 +40,8 @@ class LooperAudio
 	void startSequentialRecording(const std::vector<int>& selectedTracks);
 	void stopRecordingAndContinue();
 
+	void masterPositionReset(){ masterReadPosition = 0;}
+
 
 	bool isRecordingActive() const;
 	bool isLastTrackRecording() const;
@@ -73,6 +75,7 @@ private:
 
 	int masterTrackId = -1;
 	int masterLoopLength = 0;
+	int masterReadPosition = 0;
 	long currentSamplePosition = 0;
 
 	std::vector<int> recordingQueue;

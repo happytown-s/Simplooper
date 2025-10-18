@@ -53,18 +53,33 @@ void LooperAudio::startRecording(int trackId)
 	auto& track = tracks[trackId];
 	track.isRecording = true;
 	track.isPlaying     = false;
-	track.readPosition  = 0;
 	track.recordLength  = 0;
-	track.writePosition = 0;
 
-	//TriggerEventが有効なら記録開始位置として反映
-	if(triggerRef && triggerRef->triggerd)
+	//マスターが再生中なら、その位置から録音開始
+	if (masterLoopLength > 0 && tracks.find(masterTrackId) != tracks.end() &&tracks[masterTrackId].isPlaying)
+	{
+		//マスターの位置に同期させる
+		track.writePosition = masterReadPosition;
+		track.recordStartSample = masterReadPosition;
+		DBG("🎬 Start recording track " << trackId
+			<< " aligned with master at position " << masterReadPosition);
+
+	}//TriggerEventが有効なら記録開始位置として反映
+	else if(triggerRef && triggerRef->triggerd)
+	{
 		track.recordStartSample = static_cast<int>(triggerRef->absIndex) ;
-	else
+		track.writePosition = juce::jlimit(0, maxSamples -1, (int)triggerRef->absIndex);
+		DBG("🎬 Start recording track " << trackId
+			<< " triggered at " << triggerRef->absIndex);
+	}else
+	{
+		track.readPosition  = 0;
+		track.writePosition= 0;
 		track.recordStartSample = 0;
 
-	DBG("🎬 Start recording track " << trackId
-		<< " at sample " << track.recordStartSample);
+		DBG("🎬 Start recording track " << trackId << " from beginning");
+	}
+	track.buffer.clear();
 
 	listeners.call([&] (Listener& l) { l.onRecordingStarted(trackId); });
 }
@@ -121,10 +136,24 @@ void LooperAudio::startPlaying(int trackId)
 {
 	if (auto it = tracks.find(trackId); it != tracks.end())
 	{
-		it->second.isPlaying = true;
-		it->second.readPosition = 0;
+		auto& track = it->second;
+		track.isPlaying = true;
+
+		// 🔥 再生開始位置をマスター位置に合わせる
+		if (masterLoopLength > 0)
+		{
+			track.readPosition = masterReadPosition % masterLoopLength;
+		}
+		else
+		{
+			track.readPosition = 0;
+		}
+
+		DBG("▶️ Start playing track " << trackId
+			<< " aligned to master at " << track.readPosition);
 	}
 }
+
 
 void LooperAudio::stopPlaying(int trackId)
 {
@@ -138,7 +167,10 @@ void LooperAudio::clearTrack(int trackId)
 		it->second.buffer.clear();
 }
 
+
 // 録音・再生処理
+
+
 void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 {
 
@@ -167,7 +199,7 @@ void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 		track.recordLength += numSamples;
 		if (track.recordLength >= loopLength)
 		{
-			
+
 			stopRecording(id);
 
 
@@ -180,112 +212,41 @@ void LooperAudio::recordIntoTracks(const juce::AudioBuffer<float>& input)
 	}
 
 }
-
 void LooperAudio::mixTracksToOutput(juce::AudioBuffer<float>& output)
 {
+	const int numSamples = output.getNumSamples();
+
 	for (auto& [id, track] : tracks)
 	{
 		if (!track.isPlaying) continue;
 
 		const int numChannels = juce::jmin(output.getNumChannels(), track.buffer.getNumChannels());
-		const int numSamples = output.getNumSamples();
 		const int totalSamples = track.buffer.getNumSamples();
-		const int loopLength = (masterLoopLength > 0) ? masterLoopLength : juce::jmax(1, track.recordLength > 0 ? track.recordLength : track.buffer.getNumSamples());
+		const int loopLength = (masterLoopLength > 0)
+		? masterLoopLength
+		: juce::jmax(1, track.recordLength > 0 ? track.recordLength : track.buffer.getNumSamples());
 
-		int remaining = numSamples; //出音側ではみ出したサンプル数
+		int remaining = numSamples;
 		int readPos = track.readPosition;
 
 		while (remaining > 0)
 		{
-			// バッファ終端までの残りサンプル数
 			int samplesToEnd = totalSamples - readPos;
-
-			// 一度にコピーできるサンプル数（出力に残っている分 or 終端まで）
 			int samplesToCopy = juce::jmin(remaining, samplesToEnd);
 
-			// 🔊 実際にコピー
 			for (int ch = 0; ch < numChannels; ++ch)
 				output.addFrom(ch, numSamples - remaining, track.buffer, ch, readPos, samplesToCopy);
 
-			// 読み取り位置と残りサンプルを更新
 			readPos = (readPos + samplesToCopy) % loopLength;
 			remaining -= samplesToCopy;
 		}
 
 		track.readPosition = readPos;
-
-		// 🎛️ ログ（デバッグ用）
-//		DBG("▶️ Playing track " << id
-//			<< " | readPos: " << track.readPosition
-//			<< " / " << track.buffer.getNumSamples());
 	}
-}
 
-
-// 順次録音処理
-void LooperAudio::startSequentialRecording(const std::vector<int>& selectedTracks)
-{
-	recordingQueue = selectedTracks;
-	if (!recordingQueue.empty())
+	// ✅ ここでマスターを独立して進める
+	if (masterLoopLength > 0)
 	{
-		currentRecordingIndex = 0;
-		int firstTrackId = recordingQueue[currentRecordingIndex];
-		
-		if (auto it = tracks.find(firstTrackId); it != tracks.end())
-		{
-			// 🎙️ 録音バッファ初期化
-			it->second.buffer.clear();
-			it->second.writePosition = 0;
-			it->second.recordLength = 0;
-			it->second.isPlaying = false;
-			it->second.isRecording = true;
-
-			DBG("🎬 Start sequential recording: Track " << firstTrackId);
-		}
-
-	}
-	else
-	{
-		DBG("⚠️ No tracks selected for sequential recording!");
-	}
-
-		startRecording(recordingQueue[currentRecordingIndex]);
-}
-
-
-void LooperAudio::stopRecordingAndContinue()
-{
-	if (currentRecordingIndex >= 0 && currentRecordingIndex < (int)recordingQueue.size())
-	{
-		stopRecording(recordingQueue[currentRecordingIndex]);
-		startPlaying(recordingQueue[currentRecordingIndex]);
-		currentRecordingIndex++;
-	}
-
-	if (currentRecordingIndex < (int)recordingQueue.size())
-		startRecording(recordingQueue[currentRecordingIndex]);
-	else
-	{
-		recordingQueue.clear();
-		currentRecordingIndex = -1;
+		masterReadPosition = (masterReadPosition + numSamples) % masterLoopLength;
 	}
 }
-
-bool LooperAudio::isRecordingActive() const
-{
-	return (currentRecordingIndex >= 0 && currentRecordingIndex < (int)recordingQueue.size());
-}
-
-bool LooperAudio::isLastTrackRecording() const
-{
-	return (currentRecordingIndex >= 0 &&
-			currentRecordingIndex == (int)recordingQueue.size() - 1);
-}
-
-int LooperAudio::getCurrentTrackId() const
-{
-	if (currentRecordingIndex >= 0 && currentRecordingIndex < (int)recordingQueue.size())
-		return recordingQueue[currentRecordingIndex];
-	return -1;
-}
-

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="kNR8aj" name="Simplooper" projectType="guiapp" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" defines="JUCE_MAC_APPLICATION_SUPPORTS_SECURE_RESTORABLE_STATE=1">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" defines="JUCE_MAC_APPLICATION_SUPPORTS_SECURE_RESTORABLE_STATE=1"
+              cppLanguageStandard="20">
   <MAINGROUP id="b6GUCK" name="Simplooper">
     <GROUP id="{C3F93996-9677-0726-BD7E-A3752AC9406F}" name="Source">
       <GROUP id="{BAB8C5C4-4F39-203A-4CFC-FC525DBD8466}" name="Audio">

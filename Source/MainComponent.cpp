@@ -247,11 +247,13 @@ void MainComponent::buttonClicked(juce::Button* button)
 			int id = t->getTrackId();
 			looper.stopRecording(id);
 			looper.stopPlaying(id);
-			t->setState(LooperTrackUi::TrackState::Stopped);
+
 		}
+		updateStateVisual();
 	}
 	else if (button == &playAllButton)
 	{
+		looper.masterPositionReset();
 		for (auto& t : tracks)
 		{
 			int id = t->getTrackId();
@@ -264,6 +266,7 @@ void MainComponent::buttonClicked(juce::Button* button)
 		}
 		recordButton.setButtonText("Playing");
 		recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgreen);
+		updateStateVisual();
 	}
 
 }
@@ -397,11 +400,11 @@ void MainComponent::onRecordingStopped(int trackID)
 {
 	//DBG("EVENT !!! Main : Track " << trackID << " finished recording!" );
 
-	juce::MessageManager::callAsync([this, trackID]
-									{
-		for (auto& t : tracks)
+	for (auto& t : tracks)
+	{
+		util::safeUi([this, &t, trackID]{
 			if (t->getTrackId() == trackID)
 				t->setState(LooperTrackUi::TrackState::Playing);
-	});
+		});
+	}
 }
-

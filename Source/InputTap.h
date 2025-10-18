@@ -72,8 +72,8 @@ class InputTap : public juce::AudioIODeviceCallback
 //					<< range.getStart() << " ~ " << range.getEnd());
 			}
 		}
-		if(inputManager.getTriggerEvent().triggerd)
-			triggerFlag.store(true);
+//		if(inputManager.getTriggerEvent().triggerd)
+//			triggerFlag.store(true);
 
 	}
 
