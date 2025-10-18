@@ -50,6 +50,9 @@ void LooperAudio::addTrack(int trackId)
 
 void LooperAudio::startRecording(int trackId)
 {
+	//履歴に追加
+	backupTrackBeforeRecord(trackId);
+
 	auto& track = tracks[trackId];
 	track.isRecording = true;
 	track.isPlaying     = false;
@@ -249,4 +252,39 @@ void LooperAudio::mixTracksToOutput(juce::AudioBuffer<float>& output)
 	{
 		masterReadPosition = (masterReadPosition + numSamples) % masterLoopLength;
 	}
+}
+
+
+void LooperAudio::backupTrackBeforeRecord (int trackId)
+{
+	if (auto it = tracks.find(trackId); it != tracks.end())
+	{
+		lastHistory = TrackHistory();
+		lastHistory->trackId = trackId;
+		lastHistory->previousBuffer.makeCopyOf(it->second.buffer);
+
+		DBG("💾 Backup created for track " << trackId);
+	}
+}
+void LooperAudio::undoLastRecording()
+{
+	if(!lastHistory.has_value())
+	{
+		DBG("⚠️ Nothing  to undo");
+		return;
+	}
+
+	auto& history = lastHistory.value();
+	if(auto it = tracks.find(history.trackId); it != tracks.end())
+	{
+		it->second.buffer.makeCopyOf(history.previousBuffer);
+		it->second.isRecording =false;
+		it->second.isPlaying = false;
+		it->second.writePosition = 0;
+		it->second.recordLength = history.previousBuffer.getNumSamples();
+
+		DBG("↩️ Undo applied to track " << history.trackId);
+
+	}
+	lastHistory.reset();
 }

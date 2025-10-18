@@ -4,6 +4,13 @@
 #include <map>
 
 
+//UNDO用の履歴
+struct TrackHistory
+{
+	int trackId = -1;
+	juce::AudioBuffer<float> previousBuffer;
+};
+
 
 class LooperAudio
 {
@@ -52,6 +59,10 @@ class LooperAudio
 	void addListener(Listener* l) {listeners.add(l);}
 	void removeListener(Listener* l){listeners.remove(l);}
 
+	//UNDO関連
+	void backupTrackBeforeRecord (int trackId);
+	void undoLastRecording();
+
 private:
 
 	struct TrackData
@@ -68,6 +79,7 @@ private:
 	};
 
 	std::map<int, TrackData> tracks;
+	std::optional<TrackHistory> lastHistory;
 
 
 	double sampleRate;

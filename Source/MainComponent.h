@@ -59,9 +59,11 @@ juce::Timer
 
 	// ===== UI =====
 	juce::TextButton recordButton { "Rec" };
-	juce::TextButton playAllButton { "Play All" };
-	juce::TextButton stopAllButton { "Stop All" };
+	juce::TextButton playAllButton { "Play" };
+	juce::TextButton stopAllButton { "Stop" };
+	juce::TextButton undoButton {"UNDO"};
 	juce::TextButton settingButton { "Audio Settings" };
+
 
 	std::vector<std::unique_ptr<LooperTrackUi>> tracks;
 	LooperTrackUi* selectedTrack = nullptr;

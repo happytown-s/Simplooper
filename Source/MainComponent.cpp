@@ -25,11 +25,13 @@ MainComponent::MainComponent()
 	addAndMakeVisible(recordButton);
 	addAndMakeVisible(playAllButton);
 	addAndMakeVisible(stopAllButton);
+	addAndMakeVisible(undoButton);
 	addAndMakeVisible(settingButton);
 
 	recordButton.addListener(this);
 	playAllButton.addListener(this);
 	stopAllButton.addListener(this);
+	undoButton.addListener(this);
 	settingButton.onClick = [this] { showDeviceSettings(); };
 
 	recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkred);
@@ -138,6 +140,7 @@ void MainComponent::resized()
 	recordButton.setBounds(topArea.removeFromLeft(100).reduced(5));
 	playAllButton.setBounds(topArea.removeFromLeft(100).reduced(5));
 	stopAllButton.setBounds(topArea.removeFromLeft(100).reduced(5));
+	undoButton.setBounds(topArea.removeFromLeft(100).reduced(5));
 	settingButton.setBounds(topArea.removeFromLeft(150).reduced(5));
 
 	int x = 0, y = 0;
@@ -267,6 +270,11 @@ void MainComponent::buttonClicked(juce::Button* button)
 		recordButton.setButtonText("Playing");
 		recordButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkgreen);
 		updateStateVisual();
+	}else if (button == &undoButton)
+	{
+
+	 looper.undoLastRecording();
+
 	}
 
 }
